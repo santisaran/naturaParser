@@ -39,9 +39,9 @@ loginPayload = {
 	"senha":natura_pass
 }
 r1 = s.post("http://scn.naturacosmeticos.com.ar/index.php?option=com_geraweb&task=pessoa.loginAjax",params=loginPayload)
-f = open("salidanatLogin.html", 'w',encoding='utf8')
-f.write(r1.text)
-f.close()
+#f = open("salidanatLogin.html", 'w',encoding='utf8')
+#f.write(r1.text)
+#f.close()
 
 sg = s.get("http://scn.naturacosmeticos.com.ar/meu-negocio/mis-pedidos")
 
@@ -56,17 +56,12 @@ sg = s.get("http://scn.naturacosmeticos.com.ar/meu-negocio/index.php?option=com_
 tablaItems = pd.read_html(sg.text, attrs={'id': 'grid_itempedido'})[0]
 df = pd.DataFrame(tablaItems)
 print(df)
+#carga nuevo pedido en hoja de google spreadsheet
+#TODO verificar que la hoja no exista para no sobreescribir.
 d2g.upload(df,spreadsheet,"%s"%cicloUltimaCompra)
 
 #Hacer click en un pedido:
 #sg = s.get("http://scn.naturacosmeticos.com.ar/index.php?option=com_geraweb&view=cnoconsultapedidos&layout=pedido_abas&template=pedidos&codpedido=45107649")
-#Tracking:
-#sg = s.get("http://scn.naturacosmeticos.com.ar/meu-negocio/index.php?option=com_geraweb&view=cnoconsultapedidos&layout=tracking_pedido&template=pedidos&&codpedido=45107649")
-
-f = open("pedido.html", 'w', encoding='utf8')
-f.write(sg.text)
-f.close()
-
 #Tracking:
 #sg = s.get("http://scn.naturacosmeticos.com.ar/meu-negocio/index.php?option=com_geraweb&view=cnoconsultapedidos&layout=tracking_pedido&template=pedidos&&codpedido=45107649")
 
