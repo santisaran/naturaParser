@@ -55,6 +55,7 @@ print(codigoUltimaCompra)
 sg = s.get("http://scn.naturacosmeticos.com.ar/meu-negocio/index.php?option=com_geraweb&view=cnoconsultapedidos&layout=itens_pedido&template=pedidos&&codpedido=%s"%codigoUltimaCompra)
 tablaItems = pd.read_html(sg.text, attrs={'id': 'grid_itempedido'})[0]
 df = pd.DataFrame(tablaItems)
+df.insert(1,"valorRev",[df["Código"][i] for i in df.index]) 
 print(df)
 #carga nuevo pedido en hoja de google spreadsheet
 #TODO verificar que la hoja no exista para no sobreescribir.
