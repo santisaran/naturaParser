@@ -9,62 +9,61 @@ import os
 import requests
 import re
 import pandas as pd
+import json
 from df2gspread import df2gspread as d2g
 
 nat_url = 'http://scn.naturacosmeticos.com.ar'
 spreadsheet = '1R5LFCao9_DNH9CAldRi1whA0f4qvRTzLFnbuw0PACss'
 
 
-with open("password.txt",'r') as f:
-	natura_pass = False
-	natura_user = False
-	while True:
-		t = f.readline()
-		if t!="":
-			if t.startswith("usuario="):
-				natura_user = t.split("=")[-1]
-			elif t.startswith("pass="):
-				natura_pass = t.split("=")[-1]
-		else:
-			break
-	f.close()
+with open("password.json",'r') as f:
+    natura_pass = False
+    natura_user = False
+    
+    datosUsuario = json.load(f)
+    natura_user = datosUsuario["user"]
+    natura_pass = datosUsuario["password"]
+
 
 if natura_pass==False or natura_user==False:
-	print("Error al parsear password.txt")
-	exit()
+    print("Error al parsear password.txt")
+    exit()
 
 s = requests.Session()
 loginPayload = {
-	"usuario":natura_user,
-	"senha":natura_pass
+    "usuario":natura_user,
+    "senha":natura_pass
 }
-r1 = s.post("http://scn.naturacosmeticos.com.ar/index.php?option=com_geraweb&task=pessoa.loginAjax",params=loginPayload)
-#f = open("salidanatLogin.html", 'w',encoding='utf8')
-#f.write(r1.text)
-#f.close()
+data = {
+  'code': natura_user,
+  'pass': natura_pass,
+  'return_url': ''
+}
+r1 = s.post('https://scn.naturacosmeticos.com.ar/Login_controller/validation', data=data)
 
-sg = s.get("http://scn.naturacosmeticos.com.ar/meu-negocio/mis-pedidos")
+params = (
+    ('page', '1'),
+    ('pageSize', '1'),  #trae solo el último item.
+)
+salida = s.get(f"https://scn.naturacosmeticos.com.ar/pedidos/ajax/user-orders/{natura_user}",params=params).json()[0]
 
-tablaPedidos = pd.read_html(sg.text, attrs={'id': 'grid_pedido'})
-codigoUltimaCompra = tablaPedidos[0]['Código'][0]
-cicloUltimaCompra = tablaPedidos[0]['Ciclo'][0]
+lastorder = salida['id']
+cicloUltimaCompra = salida['cycle']
 
 print("Última compra")
-print(codigoUltimaCompra)
+print(lastorder)
 #Items pedido:
-sg = s.get("http://scn.naturacosmeticos.com.ar/meu-negocio/index.php?option=com_geraweb&view=cnoconsultapedidos&layout=itens_pedido&template=pedidos&&codpedido=%s"%codigoUltimaCompra)
-tablaItems = pd.read_html(sg.text, attrs={'id': 'grid_itempedido'})[0]
+
+sg = s.get(f'https://scn.naturacosmeticos.com.ar/pedidos/items/{lastorder}/{lastorder}')
+tablaItems = pd.read_html(sg.text, attrs={'class': 'tabla-consultoria'})[0]
+
 df = pd.DataFrame(tablaItems)
 df.insert(1,"valorRev",[df["Código"][i] for i in df.index]) 
 print(df)
 #carga nuevo pedido en hoja de google spreadsheet
 #TODO verificar que la hoja no exista para no sobreescribir.
-d2g.upload(df,spreadsheet,"%s"%cicloUltimaCompra)
 
-#Hacer click en un pedido:
-#sg = s.get("http://scn.naturacosmeticos.com.ar/index.php?option=com_geraweb&view=cnoconsultapedidos&layout=pedido_abas&template=pedidos&codpedido=45107649")
-#Tracking:
-#sg = s.get("http://scn.naturacosmeticos.com.ar/meu-negocio/index.php?option=com_geraweb&view=cnoconsultapedidos&layout=tracking_pedido&template=pedidos&&codpedido=45107649")
+d2g.upload(df,spreadsheet,f"{cicloUltimaCompra}_{lastorder}")
 
 r1.close()
 s.close()
