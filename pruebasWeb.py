@@ -45,7 +45,7 @@ params = (
     ('page', '1'),
     ('pageSize', '1'),  #trae solo el último item.
 )
-salida = s.get(f"https://scn.naturacosmeticos.com.ar/pedidos/ajax/user-orders/{natura_user}",params=params).json()[0]
+salida = s.get("https://scn.naturacosmeticos.com.ar/pedidos/ajax/user-orders/{}".format(natura_user),params=params).json()[0]
 
 lastorder = salida['id']
 cicloUltimaCompra = salida['cycle']
@@ -54,7 +54,7 @@ print("Última compra")
 print(lastorder)
 #Items pedido:
 
-sg = s.get(f'https://scn.naturacosmeticos.com.ar/pedidos/items/{lastorder}/{lastorder}')
+sg = s.get('https://scn.naturacosmeticos.com.ar/pedidos/items/{}/{}'.format(lastorder,lastorder))
 tablaItems = pd.read_html(sg.text, attrs={'class': 'tabla-consultoria'})[0]
 
 df = pd.DataFrame(tablaItems)

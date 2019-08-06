@@ -109,4 +109,5 @@ password.txt
 *.html
 *.css
 *.txt
-
+password.json
+*.ipynb
