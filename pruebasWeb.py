@@ -45,8 +45,8 @@ params = (
     ('page', '1'),
     ('pageSize', '1'),  #trae solo el último item.
 )
-salida = s.get("https://scn.naturacosmeticos.com.ar/pedidos/ajax/user-orders/{}".format(natura_user),params=params).json()[0]
-
+salida = s.get("https://scn.naturacosmeticos.com.ar/pedidos/ajax/orders/{}/0".format(natura_user),params=params).json()[0]
+print(salida)
 lastorder = salida['id']
 cicloUltimaCompra = salida['cycle']
 
