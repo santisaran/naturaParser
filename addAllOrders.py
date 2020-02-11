@@ -11,8 +11,6 @@ import re
 import pandas as pd
 import json
 from df2gspread import df2gspread as d2g
-from bs4 import BeautifulSoup
-
 
 nat_url = 'http://scn.naturacosmeticos.com.ar'
 spreadsheet = '1R5LFCao9_DNH9CAldRi1whA0f4qvRTzLFnbuw0PACss'
@@ -21,6 +19,7 @@ spreadsheet = '1R5LFCao9_DNH9CAldRi1whA0f4qvRTzLFnbuw0PACss'
 with open("password.json",'r') as f:
     natura_pass = False
     natura_user = False
+    
     datosUsuario = json.load(f)
     natura_user = datosUsuario["user"]
     natura_pass = datosUsuario["password"]
@@ -56,22 +55,15 @@ print(lastorder)
 #Items pedido:
 
 sg = s.get('https://scn.naturacosmeticos.com.ar/pedidos/items/{}/{}'.format(lastorder,lastorder))
-sopa = BeautifulSoup(sg.text,'html.parser')
-tabla  = sopa.find('table',{'class':'tabla-consultoria'})
-for span in  tabla.find_all('span'):
-    span.decompose()
-#    obj.string = obj.text.replace(',','.')
-
-
-tablaItems = pd.read_html(str(tabla))[0]
+tablaItems = pd.read_html(sg.text, attrs={'class': 'tabla-consultoria'})[0]
 
 df = pd.DataFrame(tablaItems)
-df.insert(1,"valorRev",[df["Código"][i] for i in df.index])
+df.insert(1,"valorRev",[df["Código"][i] for i in df.index]) 
 print(df)
 #carga nuevo pedido en hoja de google spreadsheet
 #TODO verificar que la hoja no exista para no sobreescribir.
 
-d2g.upload(df,spreadsheet,f"{cicloUltimaCompra}_{lastorder}")
+#d2g.upload(df,spreadsheet,f"{cicloUltimaCompra}_{lastorder}")
 
 r1.close()
 s.close()
